@@ -1,0 +1,26 @@
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Secrets / local config
+.env
+.env.*
+!.env.example
+
+# Local runtime data
+*.db
+*.sqlite3
+*.log
+outbox/
+uploads/
+reports/
+
+# Editor / OS / tooling
+.claude/
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

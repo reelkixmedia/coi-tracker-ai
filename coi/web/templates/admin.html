@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <div class="row" style="justify-content:space-between">
+    <h1 style="margin:0">Admin</h1>
+    <form method="post" action="/admin/run-now"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="secondary">Run the scheduled pass now</button></form>
+  </div>
+</div>
+<div class="grid">
+  <div class="card stat"><div class="v">{{ cust.paid }}</div><div class="l">Paying customers</div></div>
+  <div class="card stat"><div class="v">{{ cust.total }}</div><div class="l">Accounts ({{ cust.free }} free)</div></div>
+  <div class="card stat"><div class="v">{{ cust.active_30d }}</div><div class="l">Uploaded in last 30 days</div></div>
+  <div class="card stat"><div class="v">{{ '%.0f%%' % (ren.rate * 100) if ren.rate is not none else '-' }}</div><div class="l">Renewal rate ({{ ren.renewed_after_reminder }}/{{ ren.reminded }} reminded)</div></div>
+  <div class="card stat"><div class="v">{{ '%.1f h' % ren.median_hours if ren.median_hours is not none else '-' }}</div><div class="l">Median first request &rarr; renewal</div></div>
+  <div class="card stat"><div class="v">{{ vol.total }}</div><div class="l">Certificates read ({{ vol.auto_accepted }} auto, {{ vol.confirmed }} reviewed)</div></div>
+</div>
+<div class="card">
+  <h2 style="margin-top:0">Extraction accuracy over time (from customers' corrections)</h2>
+  <table>
+    <tr><th>Week</th><th>Extractor</th><th>Reviews</th><th>Fields</th><th>Corrected</th><th>Accuracy</th><th>High-confidence accuracy</th></tr>
+    {% for a in acc %}<tr><td>{{ a.week }}</td><td>{{ a.extractor }}</td><td>{{ a.reviews }}</td><td>{{ a.fields }}</td><td>{{ a.corrected }}</td>
+      <td>{{ '%.1f%%' % (a.accuracy * 100) if a.accuracy is not none else '-' }}</td><td>{{ '%.1f%%' % (a.high_conf_accuracy * 100) if a.high_conf_accuracy is not none else '-' }}</td></tr>
+    {% else %}<tr><td colspan="7" class="muted">No reviews yet.</td></tr>{% endfor %}
+  </table>
+  <p class="hint">Most corrected fields: {% for f, n in fields %}{{ f }} ({{ n }}){{ ', ' if not loop.last }}{% else %}none{% endfor %}. Readers used: {{ vol.by_extractor }}.</p>
+</div>
+<div class="card">
+  <h2 style="margin-top:0">Renewals</h2>
+  <p>{{ ren.reminders_sent }} renewal requests sent · {{ ren.renewals_total }} renewals received ({{ ren.via_link }} through the sub link){% if ren.avg_hours is not none %} · average {{ '%.1f' % ren.avg_hours }} h from first request{% endif %}</p>
+</div>
+<div class="card">
+  <h2 style="margin-top:0">Recent events</h2>
+  <table>{% for e in events %}<tr><td class="hint">{{ e.created_at.strftime('%m-%d %H:%M') }}</td><td>{{ e.type }}</td><td class="hint">acct {{ e.account_id }}</td><td class="hint">{{ e.detail }}</td></tr>{% endfor %}</table>
+</div>
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block content %}
+<p><a href="{{ '/vendors/%d' % v.id if v else '/dashboard' }}">&larr; {{ v.name if v else 'Dashboard' }}</a></p>
+<div class="card">
+  <h1 style="margin:0">{{ c.original_filename }}</h1>
+  <p class="hint">Read by {{ c.extractor or '-' }} · {{ c.review_state.replace('_', ' ') }}{% if c.extraction_error %} · <b>{{ c.extraction_error }}</b>{% endif %}</p>
+  {% if low_count and low_count == rows|length %}<div class="banner warn">This one couldn't be read automatically. Type in what's on the document (leave a policy's boxes empty if it isn't listed), then Confirm.</div>
+  {% elif low_count %}<div class="banner warn">{{ low_count }} field(s) highlighted: check them against the document, fix anything wrong, then Confirm. Everything else was read with high confidence.</div>{% endif %}
+</div>
+<div class="split">
+  <div class="card" style="padding:6px">
+    {% if c.media_type == 'application/pdf' %}
+      <iframe src="/certificates/{{ c.id }}/file" title="Certificate" style="width:100%;height:900px;border:0"></iframe>
+    {% else %}
+      <img src="/certificates/{{ c.id }}/file" alt="Certificate photo" style="width:100%">
+    {% endif %}
+  </div>
+  <div class="card">
+    <form method="post" action="/certificates/{{ c.id }}">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      {% if next_id %}<input type="hidden" name="next_id" value="{{ next_id }}">{% endif %}
+      {% set ns = namespace(group='x') %}
+      {% for r in rows %}
+        {% if r.group != ns.group %}{% set ns.group = r.group %}<h3 style="margin:18px 0 4px">{{ r.group or 'Parties' }}</h3>{% endif %}
+        <div class="{{ 'low' if r.low }}">
+          {% if r.kind == 'bool' %}
+            <label class="inline"><input type="checkbox" name="{{ r.key }}" value="yes" {{ 'checked' if r.value == 'yes' }}> {{ r.label }}</label>
+            <span class="conf">{{ '%d%%' % (r.conf * 100) }}{{ ' - check this' if r.low }}</span>
+          {% else %}
+            <label for="f_{{ r.key }}">{{ r.label }} <span class="conf">{{ '%d%%' % (r.conf * 100) if r.extracted or r.low else '' }}{{ ' - check this' if r.low }}</span></label>
+            <input id="f_{{ r.key }}" name="{{ r.key }}" type="text" value="{{ r.value }}" placeholder="{{ 'YYYY-MM-DD' if r.kind == 'date' else ('whole dollars' if r.kind == 'money' else '') }}">
+          {% endif %}
+        </div>
+      {% endfor %}
+      <p style="position:sticky;bottom:0;background:var(--card);padding:10px 0;margin:0"><button>Confirm{{ ' and next' if next_id }}</button></p>
+    </form>
+  </div>
+</div>
+{% endblock %}

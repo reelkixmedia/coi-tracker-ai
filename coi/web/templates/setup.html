@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  {% if welcome %}<h1 style="margin-top:0">One step: your requirements</h1>
+  <p class="muted">Set these once. Every certificate is checked against them automatically. The usual numbers are filled in; change anything that doesn't match your contracts.</p>
+  {% else %}<h1 style="margin-top:0">Requirements &amp; settings</h1>{% endif %}
+  <form method="post" action="/setup">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <div class="grid">
+      <div><label for="glo">General liability: each occurrence ($)</label><input id="glo" name="gl_each_occurrence" type="text" value="{{ req.gl_each_occurrence or 0 }}"></div>
+      <div><label for="gla">General liability: aggregate ($)</label><input id="gla" name="gl_general_aggregate" type="text" value="{{ req.gl_general_aggregate or 0 }}"></div>
+      <div><label for="auto">Auto: combined single limit ($, 0 = not required)</label><input id="auto" name="auto_combined_single_limit" type="text" value="{{ req.auto_combined_single_limit or 0 }}"></div>
+      <div><label for="umb">Umbrella: each occurrence ($, 0 = not required)</label><input id="umb" name="umbrella_each_occurrence" type="text" value="{{ req.umbrella_each_occurrence or 0 }}"></div>
+    </div>
+    <label class="inline"><input type="checkbox" name="wc_required" value="1" {{ 'checked' if req.wc_required }}> Workers comp required</label>
+    <label class="inline"><input type="checkbox" name="additional_insured_required" value="1" {{ 'checked' if req.additional_insured_required }}> We must be listed as additional insured</label>
+    <label for="holder">Certificate holder must include (optional)</label>
+    <input id="holder" name="holder_name_contains" type="text" value="{{ req.holder_name_contains }}" placeholder="e.g. your company name">
+    <p class="hint">Amounts accept 1000000, 1,000,000 or 1M.</p>
+    <h3>Emails</h3>
+    <label for="reply">Replies and the weekly digest go to</label>
+    <input id="reply" name="reply_email" type="email" value="{{ acct.reply_email }}">
+    <label for="tz">Time zone</label>
+    <select id="tz" name="timezone">{% for t in timezones %}<option {{ 'selected' if t == acct.timezone }}>{{ t }}</option>{% endfor %}</select>
+    <label class="inline"><input type="checkbox" name="reminders_enabled" value="1" {{ 'checked' if acct.reminders_enabled }}> Send renewal requests automatically (30 / 14 / 7 days and on expiration day)</label>
+    <label class="inline"><input type="checkbox" name="digest_enabled" value="1" {{ 'checked' if acct.digest_enabled }}> Weekly digest (Monday morning)</label>
+    <p><button>Save{% if welcome %} and go to the dashboard{% endif %}</button></p>
+  </form>
+</div>
+{% endblock %}

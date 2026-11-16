@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block content %}
+<p><a href="/dashboard">&larr; Dashboard</a></p>
+<div class="card">
+  <div class="row" style="justify-content:space-between">
+    <h1 style="margin:0">{{ v.name }}</h1>
+    <span class="pill {{ v.status }}" style="font-size:14px">{{ labels[v.status] }}</span>
+  </div>
+  {% if v.status_reasons %}<ul>{% for r in v.status_reasons %}<li>{{ r }}</li>{% endfor %}</ul>{% endif %}
+  {% if v.next_expiration %}<p>Next expiration: <b>{{ v.next_expiration.strftime('%B %d, %Y') }}</b></p>{% endif %}
+</div>
+
+<div class="split">
+<div>
+  <div class="card">
+    <h3 style="margin-top:0">Upload link for this sub (no login)</h3>
+    <p><code class="link">{{ link }}</code></p>
+    <p class="hint">This link is in every renewal request. Anything uploaded through it is read and the status updates by itself.</p>
+    <form method="post" action="/vendors/{{ v.id }}/test-reminder" class="row">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <button>Send test renewal request</button>
+      <span class="hint">to {{ recipients|join(', ') if recipients else 'nobody yet - add an email below' }}</span>
+    </form>
+    {% if not paid %}<p class="hint">Automatic 30/14/7/0-day requests are on paid plans. The test button works on every plan.</p>{% endif %}
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0">Contacts</h3>
+    <form method="post" action="/vendors/{{ v.id }}">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <label for="n">Company name</label><input id="n" name="name" type="text" value="{{ v.name }}">
+      <label for="e">Sub's email</label><input id="e" name="email" type="email" value="{{ v.email }}">
+      <label for="an">Agent / producer</label><input id="an" name="agent_name" type="text" value="{{ v.agent_name }}">
+      <label for="ae">Agent email</label><input id="ae" name="agent_email" type="email" value="{{ v.agent_email }}">
+      <label for="ap">Agent phone</label><input id="ap" name="agent_phone" type="text" value="{{ v.agent_phone }}">
+      <p class="hint">Agent details fill in from the certificate automatically.</p>
+      <p><button>Save</button></p>
+    </form>
+  </div>
+</div>
+<div>
+  <div class="card">
+    <h3 style="margin-top:0">Policies on the current certificate</h3>
+    <table>
+      <tr><th>Policy</th><th>Carrier</th><th>Number</th><th>Expires</th></tr>
+      {% for t, label in policy_types %}{% if vals.get(t ~ '.policy_number') or vals.get(t ~ '.expiration_date') %}
+      <tr><td>{{ label }}</td><td>{{ vals.get(t ~ '.carrier') }}</td><td>{{ vals.get(t ~ '.policy_number') }}</td><td>{{ vals.get(t ~ '.expiration_date') }}</td></tr>
+      {% endif %}{% endfor %}
+    </table>
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0">Certificates</h3>
+    <table>
+      <tr><th>Received</th><th>From</th><th>Read</th><th></th></tr>
+      {% for c in certs %}
+      <tr><td>{{ c.created_at.strftime('%b %d, %Y') }}</td><td>{{ 'sub link' if c.source == 'sub_link' else 'you' }}</td>
+          <td>{{ c.review_state.replace('_', ' ') }}{% if c.extraction_status != 'done' %} ({{ c.extraction_status }}){% endif %}</td>
+          <td><a href="/certificates/{{ c.id }}">{{ 'Review' if c.review_state == 'needs_review' else 'Open' }}</a></td></tr>
+      {% else %}<tr><td colspan="4" class="muted">None yet.</td></tr>{% endfor %}
+    </table>
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0">Renewal requests sent</h3>
+    <table>
+      <tr><th>When</th><th>Stage</th><th>For expiration</th><th>To</th></tr>
+      {% for r in sent %}<tr><td>{{ r.sent_at.strftime('%b %d %H:%M') }}</td><td>{{ r.stage }} days</td><td>{{ r.expiration_date }}</td><td class="hint">{{ (r.recipients or [])|join(', ') }} ({{ r.delivery_status }})</td></tr>
+      {% else %}<tr><td colspan="4" class="muted">None yet.</td></tr>{% endfor %}
+    </table>
+    {% if renewals %}<h4>Renewals received</h4><ul>{% for r in renewals %}<li>{{ r.received_at.strftime('%b %d, %Y') }}: {{ r.previous_expiration }} &rarr; {{ r.new_expiration }}{% if r.hours_from_first_reminder is not none %} ({{ r.hours_from_first_reminder }} h after the first request){% endif %}</li>{% endfor %}</ul>{% endif %}
+  </div>
+  <form method="post" action="/vendors/{{ v.id }}/remove" onsubmit="return confirm('Archive {{ v.name }}? No more reminders. History is kept.')">
+    <input type="hidden" name="csrf" value="{{ csrf }}"><button class="danger">Archive this sub</button>
+  </form>
+</div>
+</div>
+{% endblock %}

@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}{{ app_name }}{% endblock %}</title>
+<style>
+  :root { --bg:#f6f7f9; --card:#fff; --ink:#111827; --muted:#6b7280; --line:#e5e7eb; --accent:#0f766e; --warn:#b45309; --bad:#b91c1c; --ok:#15803d; --rev:#6d28d9; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#0b0f14; --card:#131a22; --ink:#e5e7eb; --muted:#9ca3af; --line:#243040; --accent:#2dd4bf; --warn:#f59e0b; --bad:#f87171; --ok:#4ade80; --rev:#a78bfa; } }
+  * { box-sizing: border-box; }
+  body { margin:0; font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif; background:var(--bg); color:var(--ink); }
+  a { color:var(--accent); }
+  header { display:flex; gap:16px; align-items:center; flex-wrap:wrap; padding:12px 20px; background:var(--card); border-bottom:1px solid var(--line); }
+  header .brand { font-weight:700; margin-right:auto; }
+  header nav a { margin-right:14px; text-decoration:none; color:var(--ink); }
+  header nav a.on { color:var(--accent); font-weight:700; }
+  main { max-width:1100px; margin:24px auto; padding:0 16px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:18px; margin-bottom:16px; }
+  .grid { display:grid; gap:12px; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); }
+  .stat { text-decoration:none; color:inherit; display:block; }
+  .stat .v { font-size:28px; font-weight:700; } .stat .l { color:var(--muted); font-size:13px; }
+  .stat.on { outline:2px solid var(--accent); }
+  .banner { padding:10px 14px; border-radius:8px; margin-bottom:14px; border:1px solid var(--line); background:var(--card); }
+  .banner.warn { border-color:var(--warn); } .banner.flash { border-color:var(--accent); }
+  label { display:block; font-weight:600; margin:12px 0 4px; }
+  label.inline { display:inline-flex; gap:6px; align-items:center; font-weight:500; margin:6px 16px 6px 0; }
+  input[type=text],input[type=email],input[type=password],input[type=number],select,textarea { width:100%; padding:9px 10px; border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--ink); font:inherit; }
+  .hint { color:var(--muted); font-size:13px; }
+  button, .btn { display:inline-block; padding:9px 16px; border-radius:8px; border:1px solid var(--accent); background:var(--accent); color:#fff; font:inherit; cursor:pointer; text-decoration:none; }
+  button.secondary, .btn.secondary { background:transparent; color:var(--accent); }
+  button.danger { background:transparent; border-color:var(--bad); color:var(--bad); }
+  table { width:100%; border-collapse:collapse; } th,td { text-align:left; padding:8px 6px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { color:var(--muted); font-weight:600; font-size:13px; }
+  .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+  .pill { display:inline-block; padding:2px 9px; border-radius:999px; font-size:12px; font-weight:600; border:1px solid var(--line); white-space:nowrap; }
+  .pill.compliant { color:var(--ok); border-color:var(--ok); } .pill.expiring { color:var(--warn); border-color:var(--warn); }
+  .pill.expired { color:#fff; background:var(--bad); border-color:var(--bad); } .pill.missing { color:var(--bad); border-color:var(--bad); }
+  .pill.needs_review { color:var(--rev); border-color:var(--rev); }
+  .muted { color:var(--muted); }
+  .drop { border:2px dashed var(--line); border-radius:10px; padding:18px; text-align:center; }
+  .split { display:grid; grid-template-columns: 1.1fr 1fr; gap:16px; }
+  @media (max-width:860px){ .split { grid-template-columns:1fr; } }
+  .low input, .low select { border-color:var(--warn); background:color-mix(in srgb, var(--warn) 10%, var(--bg)); }
+  .conf { font-size:12px; color:var(--muted); }
+  .low .conf { color:var(--warn); font-weight:700; }
+  code.link { word-break:break-all; }
+  pre.mail { white-space:pre-wrap; font:13px/1.45 ui-monospace,Consolas,monospace; background:var(--bg); padding:12px; border-radius:8px; }
+</style>
+{% block head %}{% endblock %}
+</head>
+<body>
+<header>
+  <div class="brand">{{ app_name }}</div>
+  {% if acct is defined and acct and logged_in %}
+  {% set here = request.url.path %}
+  <nav aria-label="Main">
+    <a href="/dashboard" class="{{ 'on' if here == '/dashboard' }}">Dashboard</a>
+    <a href="/review" class="{{ 'on' if here == '/review' }}">Review</a>
+    <a href="/setup" class="{{ 'on' if here == '/setup' }}">Requirements</a>
+    <a href="/outbox" class="{{ 'on' if here == '/outbox' }}">Outbox</a>
+    <a href="/billing" class="{{ 'on' if here == '/billing' }}">Billing</a>
+    {% if is_admin %}<a href="/admin" class="{{ 'on' if here == '/admin' }}">Admin</a>{% endif %}
+  </nav>
+  <form method="post" action="/logout" style="margin:0"><button class="secondary">Log out</button></form>
+  {% endif %}
+</header>
+<main>
+  {% if dry_run and logged_in %}<div class="banner warn">Dry run: no email leaves this computer. Every email is saved to the <a href="/outbox">Outbox</a> instead.</div>{% endif %}
+  {% if flash %}<div class="banner flash">{{ flash }}</div>{% endif %}
+  {% block content %}{% endblock %}
+  <p class="hint" style="margin-top:30px">Tracks dates and limits printed on certificates against the requirements you set. Not insurance advice.</p>
+</main>
+</body>
+</html>

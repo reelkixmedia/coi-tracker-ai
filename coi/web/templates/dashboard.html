@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block head %}{% if reading %}<meta http-equiv="refresh" content="4">{% endif %}{% endblock %}
+{% block content %}
+{% if not requirements_set %}<div class="banner warn">Using the default requirements (GL $1M/$2M, workers comp, additional insured). <a href="/setup">Check them</a> - takes a minute.</div>{% endif %}
+{% if reading %}<div class="banner flash">Reading {{ reading }} certificate(s)... this page refreshes by itself.</div>{% endif %}
+{% if not paid and pending_free %}<div class="banner warn"><b>{{ pending_free }} renewal request(s)</b> would go out now. Renewal requests are on paid plans - <a href="/billing">turn them on</a>.</div>{% endif %}
+
+<div class="grid" style="margin-bottom:16px">
+  {% for key in ['compliant','expiring','expired','missing','needs_review'] %}
+  <a class="card stat {{ 'on' if filter == key }}" href="/dashboard?filter={{ key if filter != key else '' }}">
+    <div class="v">{{ counts[key] }}</div><div class="l"><span class="pill {{ key }}">{{ labels[key] }}</span></div>
+  </a>
+  {% endfor %}
+</div>
+
+<div class="card">
+  <form method="post" action="/upload" enctype="multipart/form-data" class="drop" id="dropform">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <p style="margin-top:0"><b>Upload certificates</b> - PDFs or photos{% if can_bulk %}, as many as you like at once{% else %} (one at a time on the free scan){% endif %}. Each one is read and matched to the right sub automatically.</p>
+    <input type="file" name="files" accept=".pdf,.jpg,.jpeg,.png,.webp" {{ 'multiple' if can_bulk }} required onchange="this.form.submit()">
+    {% if allowance is not none %}<p class="hint">Free scan: {{ allowance }} upload(s) left.</p>{% endif %}
+  </form>
+</div>
+
+<div class="card">
+  <div class="row" style="justify-content:space-between">
+    <h2 style="margin:0">Subs &amp; vendors{% if filter %} - {{ labels[filter] }} <a class="hint" href="/dashboard">(show all)</a>{% endif %}</h2>
+    <details><summary class="btn secondary">Add a sub without a certificate</summary>
+      <form method="post" action="/vendors/new" style="min-width:280px">
+        <input type="hidden" name="csrf" value="{{ csrf }}">
+        <label for="vn">Company name</label><input id="vn" name="name" type="text" required>
+        <label for="ve">Sub's email</label><input id="ve" name="email" type="email">
+        <label for="va">Agent's email</label><input id="va" name="agent_email" type="email">
+        <p><button>Add</button></p>
+      </form>
+    </details>
+  </div>
+  <table>
+    <thead><tr><th>Sub / vendor</th><th>Status</th><th>Next expiration</th><th>Why</th></tr></thead>
+    <tbody>
+    {% for v in vendors %}
+      <tr>
+        <td><a href="/vendors/{{ v.id }}">{{ v.name }}</a></td>
+        <td><span class="pill {{ v.status }}">{{ labels[v.status] }}</span></td>
+        <td>{% if v.next_expiration %}{{ v.next_expiration.strftime('%b %d, %Y') }} <span class="hint">({{ (v.next_expiration - today).days }} days)</span>{% else %}<span class="muted">-</span>{% endif %}</td>
+        <td class="hint">{{ (v.status_reasons or [])[:3]|join('; ') }}</td>
+      </tr>
+    {% else %}
+      <tr><td colspan="4" class="muted">No subs yet. Upload certificates above - subs are created from them automatically.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

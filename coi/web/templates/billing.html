@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <h1 style="margin-top:0">Billing</h1>
+  <p>Plan: <b>{{ 'Paid (' ~ acct.plan_key ~ ')' if acct.plan_status == 'active' else acct.plan_status|capitalize }}</b>
+  {% if acct.plan_status != 'active' %} · free scan: {{ used }} of {{ free_max }} certificates used{% endif %}</p>
+  <p class="muted">Free scan: upload certificates and see the dashboard. Paid: automatic renewal requests to subs and agents, bulk upload, and the sub upload links working on their own.</p>
+</div>
+<div class="grid">
+  {% for t in tiers %}
+  <div class="card">
+    <h2 style="margin-top:0">{{ t.label }}</h2>
+    <p class="big" style="font-size:24px;font-weight:700">{{ t.price_text }}</p>
+    {% if t.max_vendors %}<p class="hint">Up to {{ t.max_vendors }} subs</p>{% endif %}
+    {% if stripe_on and t.stripe_price %}
+      <form method="post" action="/billing/checkout"><input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="plan" value="{{ t.key }}"><button>Subscribe</button></form>
+    {% elif dev %}
+      <form method="post" action="/billing/dev-activate"><input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="plan" value="{{ t.key }}"><button class="secondary">Activate test plan (local only)</button></form>
+    {% else %}<p class="hint">Not set up in Stripe yet.</p>{% endif %}
+  </div>
+  {% endfor %}
+</div>
+{% if acct.stripe_customer_id %}<form method="post" action="/billing/portal"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="secondary">Manage subscription</button></form>{% endif %}
+{% endblock %}

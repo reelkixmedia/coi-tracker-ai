@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <h1 style="margin-top:0">Needs a quick check ({{ certs|length }})</h1>
+  <p class="muted">Only certificates with low-confidence fields land here. Everything read cleanly was accepted automatically.</p>
+  <table>
+    <tr><th>Sub</th><th>File</th><th>Fields to check</th><th></th></tr>
+    {% for c in certs %}
+    <tr><td>{{ names.get(c.vendor_id, '-') }}</td><td>{{ c.original_filename }}</td>
+        <td>{{ (c.low_confidence_fields or [])|length }}{% if c.extraction_error %} <span class="hint">({{ c.extraction_error }})</span>{% endif %}</td>
+        <td><a class="btn" href="/certificates/{{ c.id }}">Review</a></td></tr>
+    {% else %}<tr><td colspan="4" class="muted">Nothing to check.</td></tr>{% endfor %}
+  </table>
+</div>
+{% endblock %}

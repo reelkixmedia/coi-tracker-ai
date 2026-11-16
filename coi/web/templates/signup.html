@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card" style="max-width:520px;margin:0 auto">
+  <h1 style="margin-top:0">Track every sub's insurance certificate</h1>
+  <p class="muted">Drop in your certificates. We read them, show who's compliant, expiring or expired, and email subs and their agents for renewals automatically.</p>
+  <form method="post" action="/signup">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <div style="display:none"><input name="website" tabindex="-1" autocomplete="off"></div>
+    <label for="company">Company name</label><input id="company" name="company" type="text" required>
+    <label for="email">Email</label><input id="email" name="email" type="email" required>
+    <label for="password">Password (8+ characters)</label><input id="password" name="password" type="password" minlength="8" required>
+    <label for="tz">Time zone</label>
+    <select id="tz" name="timezone">{% for t in timezones %}<option>{{ t }}</option>{% endfor %}</select>
+    <p><button>Create account</button></p>
+  </form>
+  <p class="hint">Already have an account? <a href="/login">Log in</a></p>
+</div>
+{% endblock %}

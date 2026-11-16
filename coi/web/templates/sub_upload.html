@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Upload certificate - {{ acct.name }}{% endblock %}
+{% block content %}
+<div class="card" style="max-width:620px;margin:0 auto">
+  {% if done %}
+    <h1 style="margin-top:0">Thank you - received</h1>
+    <p>{{ acct.name }} has your certificate for <b>{{ v.name }}</b>. It's being read now and their records update automatically. Nothing else to do.</p>
+    {% if problems %}<p class="hint">Not accepted: {{ problems|join('; ') }}</p>{% endif %}
+    <p class="hint">Need to send another file? <a href="/u/{{ token }}">Upload again</a>.</p>
+  {% else %}
+    <h1 style="margin-top:0">Upload a certificate of insurance</h1>
+    <p><b>{{ acct.name }}</b> is asking for an up-to-date certificate for <b>{{ v.name }}</b>. Insurance agents can upload directly too.</p>
+    {% if reqs %}<p>They ask for:</p><ul>{% for r in reqs %}<li>{{ r }}</li>{% endfor %}</ul>{% endif %}
+    {% if problems %}<div class="banner warn">{{ problems|join('; ') }}</div>{% endif %}
+    <form method="post" action="/u/{{ token }}" enctype="multipart/form-data" class="drop">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <p style="margin-top:0">PDF or a clear photo (JPG / PNG), up to 15 MB.</p>
+      <input type="file" name="files" accept=".pdf,.jpg,.jpeg,.png,.webp" multiple required>
+      <p><button>Upload</button></p>
+    </form>
+    <p class="hint">No account or login needed. Questions: reply to the email you got from {{ acct.name }}.</p>
+  {% endif %}
+</div>
+{% endblock %}
