@@ -16,7 +16,7 @@ on site.
 
 ## What it does
 
-- **Upload** one or many certificates (PDF or photo) from the dashboard.
+- **Upload** one or many certificates from the dashboard. Text-based PDFs are read by the built-in reader; scans and photos need the Claude path (built and unit-tested, not yet run live) or go straight to human review.
 - **Extract** about 28 fields per certificate: insured, producer/agent contact, certificate holder, and carrier,
   policy number, dates and limits for general liability, auto, umbrella and workers' comp.
 - **Match** each certificate to the right subcontractor (finds or creates the vendor by insured name).
